@@ -5,8 +5,10 @@ import { StatusBadge } from './components/StatusBadge';
 import { ActivityLog } from './components/ActivityLog';
 import { RouterStatus, WakeLogItem, SystemStatusResponse } from './types';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://wol.kakarifki.web.id';
+const RAW_API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://wakeup.kakarifki.web.id';
+// Ensure no trailing slashes to avoid double-slash URLs (e.g. //api/status)
+const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, '');
 
 const STORAGE_KEY_PASSWORD = 'wol_saved_password';
 const STORAGE_KEY_REMEMBER = 'wol_remember_pref';
@@ -50,9 +52,8 @@ export default function App() {
   const fetchStatus = useCallback(async () => {
     try {
       setIsRefreshingStatus(true);
-      const res = await fetch(`${API_BASE_URL}/api/status`, {
-        headers: { 'Cache-Control': 'no-cache' },
-      });
+      // Query param ?_t avoids browser cache without needing custom headers that trigger CORS preflight
+      const res = await fetch(`${API_BASE_URL}/api/status?_t=${Date.now()}`);
       if (res.ok) {
         const json: SystemStatusResponse = await res.json();
         if (json.success && json.data) {
